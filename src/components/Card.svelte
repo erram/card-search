@@ -1,24 +1,12 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
-	import type { Card } from '../routes/store';
+	import type { CardInterface } from '../interface';
 
-	export let card: Card;
-	export let loaded: () => void;
+	export let card: CardInterface;
 
-	function preload(src: string) {
-		return new Promise(function (resolve) {
-			let img = new Image();
-			img.onload = resolve;
-			img.src = src;
-		}).then(loaded);
-	}
 </script>
 
-<div>
-	{#await preload(card.imageUrl) then}
-		<img src={card.imageUrl} in:fly alt={card.name} />
-		<p>{card.name}</p>
-	{:catch error}
-		<p style="color: red">{error.message}</p>
-	{/await}
-</div>
+    <div class="text-center opacity-0 animate-fadeIn" style="animation-delay: 0.3s;">
+        <p class="bold">{card.name} ({card.set})</p>
+		<img class="w-3/4 mt-7 inline" src={card.imageUrl} alt={card.name} />
+    </div>
+
