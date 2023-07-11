@@ -30,7 +30,12 @@
         symbol = getRandomSymbol();
     });
 
-    async function preload(src: string) {
+    function bold(word: string, sentence: string): string {
+        const reg = new RegExp(word, "ig");
+        return sentence.replace(reg, "<b>$&</b>");
+    }
+
+    async function preloadImage(src: string) {
 		await new Promise(function (resolve) {
 			let img = new Image();
 			img.onload = resolve;
@@ -50,6 +55,7 @@
 		errorMessage = '';
 		isLoading = true;
         selectedCard= { name: '', imageUrl: '', set: '' };
+        cardList = [];
 		const res = await fetch(`https://api.magicthegathering.io/v1/cards?name=${cardName}&contains=imageUrl&pageSize=10`);
 		if (res.ok) {
 			const result = await res.json();
@@ -73,38 +79,42 @@
 		}
 	}
 </script>
-<div class="relative w-96 bg-white py-6 px-8 overflow-hidden rounded-2xl" out:fade>
-    <form autocomplete="off" on:submit|preventDefault={()=> getCard(cardName)}>
-        <div class="w-full h-min flex items-center justify-between">
-            <div class="{isLoading ? 'animate-spin' : ''} origin-center w-8 h-8">
-                <p class="ms ms-{symbol} text-2xl text-[#06283D] w-4 h-4 relative top-[-4px] left-1"></p>
+<div>
+    <div class="relative w-96 bg-white py-4 px-6 overflow-hidden rounded-2xl" out:fade>
+        <form autocomplete="off" on:submit|preventDefault={()=> getCard(cardName)}>
+            <div class="w-full h-min flex items-center justify-between">
+                <div class="{isLoading ? 'animate-spin' : ''} origin-center w-8 h-8">
+                    <p class="ms ms-{symbol} text-2xl text-[#06283D] w-4 h-4 relative top-[-4px] left-1"></p>
+                </div>
+                <input
+                    class="w-4/5 text-[#06283D] text-xl font-bold pl-6 placeholder:text-[#06283D] placeholder:capitalize"
+                    bind:value={cardName}
+                    on:input={(event) => debounce(event)}
+                    type="text"
+                    placeholder="Search for a card"
+                />
+                <button type="submit" class="fa-solid fa-magnifying-glass cursor-pointer w-14 h-14 text-white bg-[#06283D] rounded-full transition ease-in-out delay-150 hover:text-[#06283D] hover:bg-[#dff6ff]"></button>
             </div>
-            <input
-                class="w-4/5 text-[#06283D] text-xl font-bold pl-6 placeholder:text-[#06283D] placeholder:capitalize"
-                bind:value={cardName}
-                on:input={(event) => debounce(event)}
-                type="text"
-                placeholder="Search for a card"
-            />
-            <button type="submit" class="fa-solid fa-magnifying-glass cursor-pointer w-14 h-14 text-[#06283D] bg-[#dff6ff] rounded-full transition ease-in-out delay-150 hover:text-white hover:bg-[#06283D]"></button>
-        </div>
-        <!-- Search list -->
-        {#if cardList.length > 0}
-            <ul>
-                {#each cardList as card, i}
-                    <li class="hover:bg-slate-500 cursor-pointer"><p on:click={()=> selectCard({name: card.name, imageUrl: card.imageUrl, set: card.set}) }>{card.name} ({card.set})</p></li>
-                {/each}			
-            </ul>
+        </form>
+        {#if !errorMessage}
+            {#await preloadImage(selectedCard.imageUrl) then}
+                <Card card={selectedCard}/>
+            {:catch error}
+                <p style="color: red">{error.message}</p>
+            {/await}
         {/if}
-    </form>
-    {#if !errorMessage}
-        {#await preload(selectedCard.imageUrl) then}
-            <Card card={selectedCard} />
-        {:catch error}
-            <p style="color: red">{error.message}</p>
-        {/await}
-    {/if}
-    {#if errorMessage}
-        <p style="color: red">{errorMessage}</p>
-    {/if}
+        {#if errorMessage}
+            <p style="color: red">{errorMessage}</p>
+        {/if}
+    </div>
+<!-- Search list -->
+{#if cardList.length > 0}
+    <ul class="relative w-96 bg-white py-4 px-6 overflow-hidden rounded-2xl mt-2">
+    {#each cardList as card, i}
+        <li class="hover:bg-[#06283D] hover:text-white py-2 px-1 mb-2 rounded-md cursor-pointer">
+            <p on:click={()=> selectCard({name: card.name, imageUrl: card.imageUrl, set: card.set}) }>{@html bold(cardName, card.name)} ({card.set})</p>
+        </li>
+    {/each}			
+    </ul>
+{/if}
 </div>
