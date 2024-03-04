@@ -87,9 +87,14 @@
 
 <div>
 	<div class="relative w-96 bg-white py-4 px-6 overflow-hidden rounded-2xl" out:fade>
-		<form autocomplete="off" on:submit|preventDefault={() => getCard(cardName)}>
+		<form
+			autocomplete="off"
+			on:submit|preventDefault={() => {
+				if (cardName) getCard(cardName);
+			}}
+		>
 			<div class="w-full h-min flex items-center justify-between">
-				<div class="{isLoading ? 'animate-spin' : ''} origin-center w-8 h-8">
+				<div class="{isLoading ? 'animate-pulse' : ''} origin-center w-8 h-8">
 					<p class="ms ms-{symbol} text-2xl text-[#06283D] w-4 h-4 relative top-[-4px] left-1" />
 				</div>
 				<input
@@ -115,19 +120,26 @@
 		{#if errorMessage}
 			<p style="color: red">{errorMessage}</p>
 		{/if}
+
+		<!-- Search list -->
+		{#if cardList.length > 0}
+			<ul class="relative bg-white py-4 px-6 overflow-hidden rounded-2xl mt-2">
+				{#each cardList as card, i}
+					<li class="hover:bg-[#06283D] hover:text-white py-2 px-6 mb-2 rounded-md cursor-pointer">
+						<button
+							on:click={() =>
+								selectCard({ name: card.name, imageUrl: card.imageUrl, set: card.set })}
+							on:keydown={(event) => {
+								if (event.key === 'Enter') {
+									selectCard({ name: card.name, imageUrl: card.imageUrl, set: card.set });
+								}
+							}}
+						>
+							{@html bold(cardName, card.name)} ({card.set})
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	</div>
-	<!-- Search list -->
-	{#if cardList.length > 0}
-		<ul class="relative w-96 bg-white py-4 px-6 overflow-hidden rounded-2xl mt-2">
-			{#each cardList as card, i}
-				<li class="hover:bg-[#06283D] hover:text-white py-2 px-1 mb-2 rounded-md cursor-pointer">
-					<p
-						on:click={() => selectCard({ name: card.name, imageUrl: card.imageUrl, set: card.set })}
-					>
-						{@html bold(cardName, card.name)} ({card.set})
-					</p>
-				</li>
-			{/each}
-		</ul>
-	{/if}
 </div>
